@@ -7,8 +7,8 @@
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#9C27B0</color>
     <color name="purple_700">#FF7B1FA2</color>
-    <color name="selected_topic_color">#808080</color>
-    <color name="default_topic_color">#E0E0E0</color>
-    <color name="topic_text_selected">#FFFFFF</color>
-    <color name="topic_text_default">#000000</color>
+    <color name="selected_topic_color">#9C27B0</color>  <!-- Purple -->
+    <color name="default_topic_color">#E0E0E0</color>   <!-- Light Gray -->
+    <color name="topic_text_selected">#FFFFFF</color>    <!-- White -->
+    <color name="topic_text_default">#000000</color>     <!-- Black -->
 </resources>

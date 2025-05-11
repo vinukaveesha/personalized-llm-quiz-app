@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.llmexample.MainActivity;
 import com.example.llmexample.R;
 import com.example.llmexample.helper.DatabaseHelper;
 
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TopicSelectionActivity extends AppCompatActivity {
-    private static final String[] ALL_TOPICS = {"Data Structures", "Web Development", "Testing", "AI"};
+    private static final String[] ALL_TOPICS = {"Data Structures", "Web Development", "Testing", "AI", "Programming", "Neural Networks", "Algorithms", "Computer vision"};
     private DatabaseHelper dbHelper;
     private ArrayList<String> selectedTopics = new ArrayList<>();
     private TopicAdapter adapter;
@@ -43,7 +44,7 @@ public class TopicSelectionActivity extends AppCompatActivity {
         gridView.setOnItemClickListener((parent, view, position, id) -> {
             String topic = ALL_TOPICS[position];
             toggleTopicSelection(topic);
-            adapter.notifyDataSetChanged(); // Update all views
+            adapter.notifyDataSetChanged();
         });
 
         findViewById(R.id.btnContinue).setOnClickListener(v -> saveTopicsAndContinue());
@@ -78,11 +79,6 @@ public class TopicSelectionActivity extends AppCompatActivity {
             button.setText(topic);
             button.setSelected(selectedTopics.contains(topic));
 
-            // Update background color based on selection
-            button.setBackgroundColor(selectedTopics.contains(topic)
-                    ? getResources().getColor(R.color.selected_topic_color)
-                    : getResources().getColor(R.color.default_topic_color));
-
             return button;
         }
     }
@@ -93,21 +89,26 @@ public class TopicSelectionActivity extends AppCompatActivity {
             return;
         }
 
-        String username = getSharedPreferences("user_prefs", MODE_PRIVATE)
-                .getString("username", "");
-        int userId = dbHelper.getUserId(username);
+        SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        String username = prefs.getString("username", "");
 
+        if (username.isEmpty()) {
+            Toast.makeText(this, "User session expired!", Toast.LENGTH_SHORT).show();
+            restartApp();
+            return;
+        }
+
+        int userId = dbHelper.getUserId(username);
         if (userId == -1) {
             Toast.makeText(this, "User not found!", Toast.LENGTH_SHORT).show();
+            restartApp();
             return;
         }
 
         new Thread(() -> {
-            dbHelper.addUserTopics(userId, selectedTopics);
-            List<String> savedTopics = dbHelper.getUserTopics(userId);
-
+            boolean success = dbHelper.addUserTopics(userId, selectedTopics);
             runOnUiThread(() -> {
-                if (savedTopics.containsAll(selectedTopics)) {
+                if (success) {
                     startActivity(new Intent(this, DashboardActivity.class));
                     finish();
                 } else {
@@ -116,4 +117,12 @@ public class TopicSelectionActivity extends AppCompatActivity {
             });
         }).start();
     }
+
+    private void restartApp() {
+        SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        prefs.edit().clear().apply();
+        startActivity(new Intent(this, MainActivity.class));
+        finishAffinity();
+    }
+
 }

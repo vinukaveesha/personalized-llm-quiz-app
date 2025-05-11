@@ -8,4 +8,6 @@
     android:focusable="false"
     android:clickable="false"
     android:background="@drawable/topic_button_selector"
-    android:textColor="@color/topic_text_selector"/>
+    android:textColor="@color/topic_text_selector"
+    android:ellipsize="end"
+    android:maxLines="2"/>

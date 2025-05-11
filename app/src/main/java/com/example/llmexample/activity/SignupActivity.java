@@ -1,6 +1,7 @@
 package com.example.llmexample.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -27,10 +28,19 @@ public class SignupActivity extends AppCompatActivity {
     }
 
     private void attemptSignup() {
-        String username = etUsername.getText().toString();
-        String password = etPassword.getText().toString();
+        String username = etUsername.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        if (username.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (dbHelper.addUser(username, password)) {
+            // Save username to preferences after successful registration
+            SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+            prefs.edit().putString("username", username).apply();
+
             Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, TopicSelectionActivity.class));
             finish();
