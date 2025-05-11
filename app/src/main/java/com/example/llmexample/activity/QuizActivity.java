@@ -1,6 +1,7 @@
 package com.example.llmexample.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -38,6 +40,11 @@ public class QuizActivity extends AppCompatActivity {
     private Button btnNext;
     private ProgressBar progressBar;
     private DatabaseHelper dbHelper;
+
+    // Network configuration
+    private static final int REQUEST_TIMEOUT_MS = 30000;
+    private static final int MAX_RETRIES = 0;
+    private static final float BACKOFF_MULTIPLIER = 1.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,48 +74,71 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void fetchQuizQuestions(String topic) {
-
-        System.out.println("Topics ----> "+topic);
+        Log.d("QuizActivity", "Starting quiz fetch for topic: " + topic);
         progressBar.setVisibility(View.VISIBLE);
-        String url = "http://192.168.8.155:5000/getQuiz?topic=" + topic;
+
+        String encodedTopic = Uri.encode(topic);
+        String url = "http://192.168.8.155:5000/getQuiz?topic=" + encodedTopic;
+        Log.d("QuizActivity", "Request URL: " + url);
+
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                 Request.Method.GET, url, null,
                 response -> {
+                    Log.d("QuizActivity", "Raw API response: " + response.toString());
                     progressBar.setVisibility(View.GONE);
                     try {
                         JSONArray quizArray = response.getJSONArray("quiz");
+                        if (quizArray.length() == 0) {
+                            throw new Exception("Empty quiz response from server");
+                        }
                         parseQuestions(quizArray);
                         showQuestion(currentQuestionIndex);
                     } catch (Exception e) {
-                        showError("Error parsing questions");
+                        Log.e("QuizActivity", "Response parsing error", e);
+                        showError("Error parsing questions: " + e.getMessage());
                     }
                 },
                 error -> {
+                    Log.e("QuizActivity", "Volley error: " + error.getMessage());
                     progressBar.setVisibility(View.GONE);
-                    showError("Failed to load questions");
+                    showError("Network error: " + error.getMessage());
                 }
         );
+        // Configure timeout and retry policy
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                REQUEST_TIMEOUT_MS,
+                MAX_RETRIES,
+                BACKOFF_MULTIPLIER
+        ));
 
         queue.add(jsonObjectRequest);
     }
 
+
     private void parseQuestions(JSONArray quizArray) throws Exception {
-        questions.clear(); // Clear previous questions first
-
-
+        questions.clear();
+        Log.d("QuizActivity", "Parsing " + quizArray.length() + " questions");
 
         for (int i = 0; i < quizArray.length(); i++) {
             JSONObject q = quizArray.getJSONObject(i);
 
-            // Add null checks
-            String questionText = q.optString("question", "").replace("`", "").trim();
-            JSONArray originalOptions = q.optJSONArray("options");
-            String correctAnswer = q.optString("correct_answer", "").trim().toUpperCase();
+            String questionText = q.optString("question", "")
+                    .replace("`", "")
+                    .trim();
 
-            if (questionText.isEmpty() || originalOptions == null || correctAnswer.isEmpty()) {
-                throw new Exception("Invalid question format at index " + i);
+            JSONArray originalOptions = q.optJSONArray("options");
+            if (originalOptions == null || originalOptions.length() < 4) {
+                throw new Exception("Invalid options at index " + i);
+            }
+
+            String correctAnswer = q.optString("correct_answer", "")
+                    .trim()
+                    .toUpperCase();
+
+            if (correctAnswer.isEmpty() || correctAnswer.charAt(0) < 'A' || correctAnswer.charAt(0) > 'D') {
+                throw new Exception("Invalid correct answer at index " + i + ": " + correctAnswer);
             }
 
             JSONArray cleanedOptions = new JSONArray();
@@ -119,18 +149,10 @@ public class QuizActivity extends AppCompatActivity {
                 cleanedOptions.put(cleanedOption);
             }
 
-            if (correctAnswer.isEmpty() || correctAnswer.charAt(0) < 'A' || correctAnswer.charAt(0) > 'D') {
-                throw new Exception("Invalid correct answer: " + correctAnswer);
-            }
-
             int correctIndex = correctAnswer.charAt(0) - 'A';
+            questions.add(new Question(questionText, cleanedOptions, correctIndex));
 
-            // Add to questions list
-            questions.add(new Question(
-                    questionText,
-                    cleanedOptions,
-                    correctIndex
-            ));
+            Log.d("QuizActivity", "Added question: " + questionText);
         }
     }
 
@@ -206,6 +228,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private void showError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        Log.e("QuizActivity", "Error occurred: " + message);
         finish();
     }
 

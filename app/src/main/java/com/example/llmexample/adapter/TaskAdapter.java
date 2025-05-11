@@ -17,7 +17,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     private List<Task> tasks;
     private final OnTaskClickListener listener;
     public interface OnTaskClickListener {
-        void onTaskClick(Task task);
+        void onTaskClick(String topic);  // Changed from Task to String
     }
 
 
@@ -42,7 +42,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.tvSource.setText(task.getSource());
 
         holder.itemView.setOnClickListener(v ->
-                listener.onTaskClick(task));
+                listener.onTaskClick(task.getTitle()));
     }
 
     @Override

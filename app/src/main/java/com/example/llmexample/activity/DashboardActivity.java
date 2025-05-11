@@ -32,13 +32,15 @@ public class DashboardActivity extends AppCompatActivity {
     private RecyclerView rvTasks;
     private DatabaseHelper dbHelper;
     private TaskAdapter adapter;
+    // In DashboardActivity's setupRecyclerView()
+    // In DashboardActivity.java
     private void setupRecyclerView() {
         rvTasks = findViewById(R.id.rvTasks);
         rvTasks.setLayoutManager(new LinearLayoutManager(this));
 
-        adapter = new TaskAdapter(new ArrayList<>(), task -> {
-            // Get title from Task object
-            startQuizActivity(task.getTitle());
+        // Use TaskAdapter with String parameter
+        adapter = new TaskAdapter(new ArrayList<>(), topic -> {
+            startQuizActivity(topic);
         });
 
         rvTasks.setAdapter(adapter);
