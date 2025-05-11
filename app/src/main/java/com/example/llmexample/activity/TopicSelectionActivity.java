@@ -76,11 +76,12 @@ public class TopicSelectionActivity extends AppCompatActivity {
 
             String topic = ALL_TOPICS[position];
             button.setText(topic);
+            button.setSelected(selectedTopics.contains(topic));
 
-            // Update both selection state and visual appearance
-            boolean isSelected = selectedTopics.contains(topic);
-            button.setSelected(isSelected);
-            button.setActivated(isSelected); // Add this line
+            // Update background color based on selection
+            button.setBackgroundColor(selectedTopics.contains(topic)
+                    ? getResources().getColor(R.color.selected_topic_color)
+                    : getResources().getColor(R.color.default_topic_color));
 
             return button;
         }
@@ -92,50 +93,27 @@ public class TopicSelectionActivity extends AppCompatActivity {
             return;
         }
 
-        // Database operations
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
         String username = getSharedPreferences("user_prefs", MODE_PRIVATE)
                 .getString("username", "");
+        int userId = dbHelper.getUserId(username);
 
-        try (Cursor cursor = db.query(
-                DatabaseHelper.TABLE_USERS,
-                new String[]{DatabaseHelper.COLUMN_ID},
-                DatabaseHelper.COLUMN_USERNAME + " = ?",
-                new String[]{username}, null, null, null)) {
+        if (userId == -1) {
+            Toast.makeText(this, "User not found!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            if (cursor.moveToFirst()) {
-                int userId = cursor.getInt(0);
-                Log.d("TOPIC_SAVE", "Saving " + selectedTopics.size() + " topics for user " + userId);
+        new Thread(() -> {
+            dbHelper.addUserTopics(userId, selectedTopics);
+            List<String> savedTopics = dbHelper.getUserTopics(userId);
 
-                // Clear existing topics
-                db.delete(DatabaseHelper.TABLE_TOPICS,
-                        DatabaseHelper.COLUMN_USER_ID + " = ?",
-                        new String[]{String.valueOf(userId)});
-
-                // Insert new topics
-                for (String topic : selectedTopics) {
-                    values.clear();
-                    values.put(DatabaseHelper.COLUMN_USER_ID, userId);
-                    values.put(DatabaseHelper.COLUMN_TOPIC, topic);
-                    db.insert(DatabaseHelper.TABLE_TOPICS, null, values);
-                }
-
-                System.out.println(selectedTopics);
-
-                List<String> savedTopics = dbHelper.getUserTopics(userId);
-                Log.d("TOPIC_VERIFY", "Saved topics count: " + savedTopics.size());
-
-                if(savedTopics.containsAll(selectedTopics)) {
+            runOnUiThread(() -> {
+                if (savedTopics.containsAll(selectedTopics)) {
                     startActivity(new Intent(this, DashboardActivity.class));
                     finish();
                 } else {
                     Toast.makeText(this, "Failed to save topics!", Toast.LENGTH_LONG).show();
                 }
-
-                startActivity(new Intent(this, DashboardActivity.class));
-                finish();
-            }
-        }
+            });
+        }).start();
     }
 }

@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    android:textColor="@color/topic_text_selector"
-    android:background="@drawable/topic_button_selector"
     android:textSize="16sp"
     android:focusable="false"
-    android:clickable="false"/>
+    android:clickable="false"
+    android:background="@drawable/topic_button_selector"
+    android:textColor="@color/topic_text_selector"/>
