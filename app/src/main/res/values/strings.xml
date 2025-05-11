@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">LLMExample</string>
+    <string name="welcome_message">Hello, %s</string>
+    <string name="task_count">You have %d tasks due</string>
+</resources>
