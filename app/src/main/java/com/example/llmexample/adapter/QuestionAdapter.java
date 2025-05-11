@@ -37,17 +37,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Question question = questions.get(position);
 
-        // Set question data to views
-//        holder.tvTaskTitle.setText(question.getTitle());
-//        holder.tvTaskDescription.setText(question.getDescription());
-//        holder.tvTaskSource.setText(question.getSource());
-
-        // Handle item click
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onQuestionClick(question);
-            }
-        });
+        holder.tvTaskTitle.setText(question.getQuestion());
     }
 
     @Override

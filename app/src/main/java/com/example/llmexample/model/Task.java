@@ -1,4 +1,5 @@
 package com.example.llmexample.model;
+
 public class Task {
     private String title;
     private String description;
@@ -10,7 +11,6 @@ public class Task {
         this.source = source;
     }
 
-    // Getters
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getSource() { return source; }

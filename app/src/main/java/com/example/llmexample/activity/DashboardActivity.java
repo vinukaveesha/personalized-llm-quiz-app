@@ -32,17 +32,13 @@ public class DashboardActivity extends AppCompatActivity {
     private RecyclerView rvTasks;
     private DatabaseHelper dbHelper;
     private TaskAdapter adapter;
-
-    private QuestionAdapter questionAdapter;
-
     private void setupRecyclerView() {
-        RecyclerView rvTasks = findViewById(R.id.rvTasks);
+        rvTasks = findViewById(R.id.rvTasks);
         rvTasks.setLayoutManager(new LinearLayoutManager(this));
 
-        // Initialize with empty list
-        questionAdapter = new QuestionAdapter(new ArrayList<>(), question -> {
-            // Handle item click - start quiz for selected question
-            startQuizActivity(question.getTitle());
+        adapter = new TaskAdapter(new ArrayList<>(), task -> {
+            // Get title from Task object
+            startQuizActivity(task.getTitle());
         });
 
         rvTasks.setAdapter(adapter);
@@ -120,7 +116,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void updateTaskDisplay(List<Task> tasks) {
         tvTaskCount.setText(getString(R.string.task_count, tasks.size()));
-        adapter.updateTasks(tasks);
+        adapter.updateTasks(tasks);  // This should be using TaskAdapter
     }
 
     private void redirectToTopicSelection() {

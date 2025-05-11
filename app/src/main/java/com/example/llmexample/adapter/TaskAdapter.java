@@ -13,12 +13,13 @@ import com.example.llmexample.model.Task;
 import java.util.List;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
+
     private List<Task> tasks;
     private final OnTaskClickListener listener;
-
     public interface OnTaskClickListener {
-        void onTaskClick(String topic);
+        void onTaskClick(Task task);
     }
+
 
     public TaskAdapter(List<Task> tasks, OnTaskClickListener listener) {
         this.tasks = tasks;
@@ -41,7 +42,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         holder.tvSource.setText(task.getSource());
 
         holder.itemView.setOnClickListener(v ->
-                listener.onTaskClick(task.getTitle()));
+                listener.onTaskClick(task));
     }
 
     @Override

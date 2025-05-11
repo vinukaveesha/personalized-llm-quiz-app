@@ -2,6 +2,7 @@ package com.example.llmexample.activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -16,7 +17,9 @@ import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.llmexample.R;
+import com.example.llmexample.adapter.QuestionAdapter;
 import com.example.llmexample.helper.DatabaseHelper;
+import com.example.llmexample.model.Question;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,9 +38,6 @@ public class QuizActivity extends AppCompatActivity {
     private Button btnNext;
     private ProgressBar progressBar;
     private DatabaseHelper dbHelper;
-    // Add these class-level variables
-    private List<Question> questions = new ArrayList<>();
-    private QuestionAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,16 +97,20 @@ public class QuizActivity extends AppCompatActivity {
     private void parseQuestions(JSONArray quizArray) throws Exception {
         questions.clear(); // Clear previous questions first
 
+
+
         for (int i = 0; i < quizArray.length(); i++) {
             JSONObject q = quizArray.getJSONObject(i);
 
-            // Clean question text
-            String questionText = q.getString("question")
-                    .replace("`", "")
-                    .trim();
+            // Add null checks
+            String questionText = q.optString("question", "").replace("`", "").trim();
+            JSONArray originalOptions = q.optJSONArray("options");
+            String correctAnswer = q.optString("correct_answer", "").trim().toUpperCase();
 
-            // Clean options
-            JSONArray originalOptions = q.getJSONArray("options");
+            if (questionText.isEmpty() || originalOptions == null || correctAnswer.isEmpty()) {
+                throw new Exception("Invalid question format at index " + i);
+            }
+
             JSONArray cleanedOptions = new JSONArray();
             for (int j = 0; j < originalOptions.length(); j++) {
                 String cleanedOption = originalOptions.getString(j)
@@ -114,11 +118,6 @@ public class QuizActivity extends AppCompatActivity {
                         .trim();
                 cleanedOptions.put(cleanedOption);
             }
-
-            // Get and validate correct answer
-            String correctAnswer = q.getString("correct_answer")
-                    .trim()
-                    .toUpperCase();
 
             if (correctAnswer.isEmpty() || correctAnswer.charAt(0) < 'A' || correctAnswer.charAt(0) > 'D') {
                 throw new Exception("Invalid correct answer: " + correctAnswer);
@@ -146,15 +145,17 @@ public class QuizActivity extends AppCompatActivity {
         tvProgress.setText((index + 1) + "/" + questions.size());
 
         JSONArray options = currentQuestion.getOptions();
-
-        // Single loop that handles both text and visibility
-        for (int i = 0; i < 4; i++) {
-            if (i < options.length()) {
-                optionButtons[i].setVisibility(View.VISIBLE);
-                optionButtons[i].setText(options.optString(i));
-            } else {
-                optionButtons[i].setVisibility(View.GONE);
+        try {
+            for (int i = 0; i < 4; i++) {
+                if (i < options.length()) {
+                    optionButtons[i].setVisibility(View.VISIBLE);
+                    optionButtons[i].setText(options.getString(i));
+                } else {
+                    optionButtons[i].setVisibility(View.GONE);
+                }
             }
+        } catch (Exception e) {
+            Log.e("QuizActivity", "Error setting options", e);
         }
 
         radioGroup.clearCheck();
