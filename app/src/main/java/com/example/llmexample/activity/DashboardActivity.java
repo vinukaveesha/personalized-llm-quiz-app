@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.llmexample.R;
+import com.example.llmexample.adapter.QuestionAdapter;
 import com.example.llmexample.adapter.TaskAdapter;
 import com.example.llmexample.helper.DatabaseHelper;
 import com.example.llmexample.model.Task;
@@ -32,6 +33,21 @@ public class DashboardActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private TaskAdapter adapter;
 
+    private QuestionAdapter questionAdapter;
+
+    private void setupRecyclerView() {
+        RecyclerView rvTasks = findViewById(R.id.rvTasks);
+        rvTasks.setLayoutManager(new LinearLayoutManager(this));
+
+        // Initialize with empty list
+        questionAdapter = new QuestionAdapter(new ArrayList<>(), question -> {
+            // Handle item click - start quiz for selected question
+            startQuizActivity(question.getTitle());
+        });
+
+        rvTasks.setAdapter(adapter);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,12 +64,6 @@ public class DashboardActivity extends AppCompatActivity {
         tvWelcome = findViewById(R.id.tvWelcome);
         tvTaskCount = findViewById(R.id.tvTaskCount);
         rvTasks = findViewById(R.id.rvTasks);
-    }
-
-    private void setupRecyclerView() {
-        rvTasks.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new TaskAdapter(new ArrayList<>(), this::startQuizActivity);
-        rvTasks.setAdapter(adapter);
     }
 
     private void loadUserData() {
@@ -78,6 +88,7 @@ public class DashboardActivity extends AppCompatActivity {
                 handleTasksLoaded(tasks);
             });
         });
+
     }
 
     private List<Task> createTasksFromTopics(List<String> topics) {

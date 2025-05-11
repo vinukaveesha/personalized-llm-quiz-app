@@ -35,6 +35,9 @@ public class QuizActivity extends AppCompatActivity {
     private Button btnNext;
     private ProgressBar progressBar;
     private DatabaseHelper dbHelper;
+    // Add these class-level variables
+    private List<Question> questions = new ArrayList<>();
+    private QuestionAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +70,7 @@ public class QuizActivity extends AppCompatActivity {
 
         System.out.println("Topics ----> "+topic);
         progressBar.setVisibility(View.VISIBLE);
-        String url = "http://192.168.1.147:5000/getQuiz?topic=" + topic;
+        String url = "http://192.168.8.155:5000/getQuiz?topic=" + topic;
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
@@ -92,14 +95,43 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void parseQuestions(JSONArray quizArray) throws Exception {
+        questions.clear(); // Clear previous questions first
+
         for (int i = 0; i < quizArray.length(); i++) {
             JSONObject q = quizArray.getJSONObject(i);
-            Question question = new Question(
-                    q.getString("question"),
-                    q.getJSONArray("options"),
-                    q.getString("correct_answer")
-            );
-            questions.add(question);
+
+            // Clean question text
+            String questionText = q.getString("question")
+                    .replace("`", "")
+                    .trim();
+
+            // Clean options
+            JSONArray originalOptions = q.getJSONArray("options");
+            JSONArray cleanedOptions = new JSONArray();
+            for (int j = 0; j < originalOptions.length(); j++) {
+                String cleanedOption = originalOptions.getString(j)
+                        .replace("`", "")
+                        .trim();
+                cleanedOptions.put(cleanedOption);
+            }
+
+            // Get and validate correct answer
+            String correctAnswer = q.getString("correct_answer")
+                    .trim()
+                    .toUpperCase();
+
+            if (correctAnswer.isEmpty() || correctAnswer.charAt(0) < 'A' || correctAnswer.charAt(0) > 'D') {
+                throw new Exception("Invalid correct answer: " + correctAnswer);
+            }
+
+            int correctIndex = correctAnswer.charAt(0) - 'A';
+
+            // Add to questions list
+            questions.add(new Question(
+                    questionText,
+                    cleanedOptions,
+                    correctIndex
+            ));
         }
     }
 
@@ -113,8 +145,16 @@ public class QuizActivity extends AppCompatActivity {
         tvQuestion.setText(currentQuestion.getQuestion());
         tvProgress.setText((index + 1) + "/" + questions.size());
 
+        JSONArray options = currentQuestion.getOptions();
+
+        // Single loop that handles both text and visibility
         for (int i = 0; i < 4; i++) {
-            optionButtons[i].setText(currentQuestion.getOptions().optString(i));
+            if (i < options.length()) {
+                optionButtons[i].setVisibility(View.VISIBLE);
+                optionButtons[i].setText(options.optString(i));
+            } else {
+                optionButtons[i].setVisibility(View.GONE);
+            }
         }
 
         radioGroup.clearCheck();
@@ -128,11 +168,11 @@ public class QuizActivity extends AppCompatActivity {
             return;
         }
 
-        RadioButton selected = findViewById(selectedId);
-        String selectedAnswer = selected.getText().toString();
-        String correctAnswer = questions.get(currentQuestionIndex).getCorrectAnswer();
+        // Get the position of the selected radio button
+        int selectedIndex = radioGroup.indexOfChild(findViewById(selectedId));
 
-        if (selectedAnswer.startsWith(correctAnswer)) {
+        // Compare with stored correct index
+        if (selectedIndex == questions.get(currentQuestionIndex).getCorrectIndex()) {
             score++;
         }
 
@@ -171,16 +211,16 @@ public class QuizActivity extends AppCompatActivity {
     public static class Question {
         private final String question;
         private final JSONArray options;
-        private final String correctAnswer;
+        private final int correctIndex; // Changed from String to int
 
-        public Question(String question, JSONArray options, String correctAnswer) {
+        public Question(String question, JSONArray options, int correctIndex) {
             this.question = question;
             this.options = options;
-            this.correctAnswer = correctAnswer;
+            this.correctIndex = correctIndex;
         }
 
         public String getQuestion() { return question; }
         public JSONArray getOptions() { return options; }
-        public String getCorrectAnswer() { return correctAnswer; }
+        public int getCorrectIndex() { return correctIndex; }
     }
 }
