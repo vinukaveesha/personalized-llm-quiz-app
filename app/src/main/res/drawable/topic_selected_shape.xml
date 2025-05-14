@@ -1,0 +1,6 @@
+<!-- app/src/main/res/drawable/topic_selected_shape.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/selected_topic_color"/>
+    <corners android:radius="8dp"/>
+</shape>

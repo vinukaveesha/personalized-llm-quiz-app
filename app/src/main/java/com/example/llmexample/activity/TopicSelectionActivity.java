@@ -77,8 +77,12 @@ public class TopicSelectionActivity extends AppCompatActivity {
 
             String topic = ALL_TOPICS[position];
             button.setText(topic);
-            button.setSelected(selectedTopics.contains(topic));
 
+            // Update selection state
+            boolean isSelected = selectedTopics.contains(topic);
+            button.setSelected(isSelected);
+
+            // Remove programmatic color changes
             return button;
         }
     }
