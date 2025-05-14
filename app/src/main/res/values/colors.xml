@@ -7,9 +7,9 @@
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#9C27B0</color>
     <color name="purple_700">#FF7B1FA2</color>
-    <color name="selected_topic_color">#4CAF50</color> <!-- Green -->
-    <color name="default_topic_color">#F44336</color> <!-- Red -->
-    <color name="topic_text_selected">#FFFFFF</color>    <!-- White -->
-    <color name="topic_text_default">#000000</color>     <!-- Black -->
     <color name="red">#E57373</color>
+    <color name="selected_topic_color">#2196F3</color>  <!-- Blue -->
+    <color name="default_topic_color">#F5F5F5</color>   <!-- Light gray -->
+    <color name="topic_text_selected">#FFFFFF</color>   <!-- White -->
+    <color name="topic_text_default">#212121</color>    <!-- Dark gray -->
 </resources>

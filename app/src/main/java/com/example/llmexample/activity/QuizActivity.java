@@ -78,7 +78,7 @@ public class QuizActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
 
         String encodedTopic = Uri.encode(topic);
-        String url = "http://192.168.8.155:5000/getQuiz?topic=" + encodedTopic;
+        String url = "http://172.15.10.135:5000/getQuiz?topic=" + encodedTopic;
         Log.d("QuizActivity", "Request URL: " + url);
 
         RequestQueue queue = Volley.newRequestQueue(this);

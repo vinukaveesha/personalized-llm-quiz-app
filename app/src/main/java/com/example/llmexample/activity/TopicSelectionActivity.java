@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.llmexample.MainActivity;
 import com.example.llmexample.R;
 import com.example.llmexample.helper.DatabaseHelper;
+import android.view.HapticFeedbackConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,12 @@ public class TopicSelectionActivity extends AppCompatActivity {
 
         dbHelper = new DatabaseHelper(this);
         GridView gridView = findViewById(R.id.gridTopics);
+
+        // Load existing selections
+        SharedPreferences prefs = getSharedPreferences("user_prefs", MODE_PRIVATE);
+        String username = prefs.getString("username", "");
+        int userId = dbHelper.getUserId(username);
+        selectedTopics = new ArrayList<>(dbHelper.getUserTopics(userId)); // Load existing topics
 
         adapter = new TopicAdapter();
         gridView.setAdapter(adapter);
@@ -56,9 +63,17 @@ public class TopicSelectionActivity extends AppCompatActivity {
         } else {
             if (selectedTopics.size() < 10) {
                 selectedTopics.add(topic);
+                // Add haptic feedback with proper context
+                findViewById(R.id.gridTopics).performHapticFeedback(
+                        HapticFeedbackConstants.VIRTUAL_KEY
+                );
+            } else {
+                Toast.makeText(this, "Maximum 10 topics allowed", Toast.LENGTH_SHORT).show();
             }
         }
+        adapter.notifyDataSetChanged();
     }
+
 
     private class TopicAdapter extends BaseAdapter {
         @Override
@@ -78,11 +93,16 @@ public class TopicSelectionActivity extends AppCompatActivity {
             String topic = ALL_TOPICS[position];
             button.setText(topic);
 
-            // Update selection state
+            // Update selection state with enhanced visual feedback
             boolean isSelected = selectedTopics.contains(topic);
             button.setSelected(isSelected);
 
-            // Remove programmatic color changes
+            // Add visual indicators
+            button.setCompoundDrawablesWithIntrinsicBounds(
+                    0, isSelected ? R.drawable.ic_check : 0, 0, 0
+            );
+            button.setCompoundDrawablePadding(8);
+
             return button;
         }
     }
